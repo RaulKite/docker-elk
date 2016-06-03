@@ -1,0 +1,38 @@
+version: '2'
+services:
+  elasticsearch:
+    image: elasticsearch:latest
+    command: elasticsearch -Des.network.host=0.0.0.0
+    volumes:
+      - "$PWD/esdata:/usr/share/elasticsearch/data"
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+  logstash:
+    build: logstash
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+    volumes:
+      - "$PWD/logstash/config:/etc/logstash/conf.d"
+      - "$PWD/logstash/certs:/certs"
+    ports:
+      - "5000:5000"
+    links:
+      - elasticsearch
+  kibana:
+    build: kibana/
+    volumes:
+      - "$PWD/kibana/config/:/opt/kibana/config/"
+#    ports:
+#      - "5601"
+    links:
+      - elasticsearch
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "$PWD/nginx/certs:/certs"
+      - "$PWD/nginx/config:/etc/nginx/conf.d/"
+    links:
+      - kibana
